@@ -15,7 +15,7 @@ typedef struct MxHWDevice_Vtbl
 
 struct MxHWDevice
 {
-    MxHWDevice_Vtbl vtbl;
+    MxHWDevice_Vtbl *vtbl;
 };
 
 MxResult MxHWDevice_init(const MxDeviceInfo *info, MxHWDevice **device);

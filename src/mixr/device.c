@@ -17,6 +17,13 @@ MxResult mxCreateDevice(const MxDeviceInfo* info, MxDevice** device)
 
     impl->info = *info;
 
+    MxResult res = MxHWDevice_init(info, &impl->hwDevice);
+    if (res != MX_RESULT_OK)
+    {
+        free(impl);
+        return res;
+    }
+
     *device = (MxDevice *) impl;
     return MX_RESULT_OK;
 }
@@ -27,5 +34,6 @@ void mxDestroyDevice(MxDevice* device)
         return;
 
     MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    MxHWDevice_deinit(impl->hwDevice);
     free(impl);
 }
