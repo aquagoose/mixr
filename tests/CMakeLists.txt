@@ -1,0 +1,12 @@
+file(GLOB MIXR_TESTS CONFIGURE_DEPENDS *.c)
+
+message(STATUS "Searching for tests")
+list(APPEND CMAKE_MESSAGE_INDENT "  ")
+foreach (file IN LISTS MIXR_TESTS)
+    get_filename_component(filename ${file} NAME_WE)
+    set(testname "Test_${filename}")
+    message(STATUS "${testname} -> ${file}")
+    add_executable(${testname} ${file})
+    target_link_libraries(${testname} PRIVATE mixr)
+endforeach ()
+list(POP_BACK CMAKE_MESSAGE_INDENT)

@@ -7,7 +7,9 @@ extern "C" {
 
 typedef enum MxResult
 {
-    MX_RESULT_OK
+    MX_RESULT_OK, // success
+    MX_RESULT_UNKNOWN_ERROR, // unknown/undocumented error
+    MX_RESULT_OUT_OF_MEMORY, // a memory allocation failed
 } MxResult;
 
 #ifdef __cplusplus
