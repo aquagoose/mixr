@@ -1,10 +1,12 @@
 #include "mixr/device.h"
+#include "hw/hwdevice.h"
 
 #include <stdlib.h>
 
 typedef struct MxDevice_Impl
 {
     MxDeviceInfo info;
+    MxHWDevice *hwDevice;
 } MxDevice_Impl;
 
 MxResult mxCreateDevice(const MxDeviceInfo* info, MxDevice** device)
