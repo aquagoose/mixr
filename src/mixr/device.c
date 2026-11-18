@@ -9,7 +9,7 @@ typedef struct MxDevice_Impl
     MxHWDevice *hwDevice;
 } MxDevice_Impl;
 
-MxResult mxCreateDevice(const MxDeviceInfo* info, MxDevice** device)
+MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device)
 {
     MxDevice_Impl *impl = malloc(sizeof(MxDevice_Impl));
     if (!impl)
@@ -28,7 +28,7 @@ MxResult mxCreateDevice(const MxDeviceInfo* info, MxDevice** device)
     return MX_RESULT_OK;
 }
 
-void mxDestroyDevice(MxDevice* device)
+void mxDestroyDevice(MxDevice *device)
 {
     if (!device)
         return;
@@ -36,4 +36,16 @@ void mxDestroyDevice(MxDevice* device)
     MxDevice_Impl *impl = (MxDevice_Impl *) device;
     MxHWDevice_deinit(impl->hwDevice);
     free(impl);
+}
+
+MxResult mxStartDevice(MxDevice *device)
+{
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    return MxHWDevice_start(impl->hwDevice);
+}
+
+void mxStopDevice(MxDevice* device)
+{
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    MxHWDevice_stop(impl->hwDevice);
 }

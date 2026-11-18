@@ -1,6 +1,7 @@
 #include <mixr/device.h>
 
 #include <stdio.h>
+#include <unistd.h>
 
 #define MX_CHECK(result, operation) {\
     printf(operation"\n");\
@@ -20,6 +21,8 @@ int main(int argc, char **argv)
 
     MxDevice *device;
     MX_CHECK(mxCreateDevice(&deviceInfo, &device), "Create device");
+
+    sleep(5);
 
     mxDestroyDevice(device);
     return 0;

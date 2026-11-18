@@ -9,7 +9,7 @@ typedef struct MxHWDevice MxHWDevice;
 typedef struct MxHWDevice_Vtbl
 {
     void (*deinit)(MxHWDevice *self);
-    void (*start)(MxHWDevice *self);
+    MxResult (*start)(MxHWDevice *self);
     void (*stop)(MxHWDevice *self);
 } MxHWDevice_Vtbl;
 
@@ -20,5 +20,8 @@ struct MxHWDevice
 
 MxResult MxHWDevice_init(const MxDeviceInfo *info, MxHWDevice **device);
 void MxHWDevice_deinit(MxHWDevice *device);
+
+static MxResult MxHWDevice_start(MxHWDevice *device) { return device->vtbl->start(device); }
+static void MxHWDevice_stop(MxHWDevice *device) { device->vtbl->stop(device); }
 
 #endif //MIXR_HWDEVICE_H
