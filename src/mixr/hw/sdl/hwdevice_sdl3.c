@@ -42,6 +42,7 @@ static void MxHWDevice_SDL3_stop(MxHWDevice *self)
         return;
 
     SDL_DestroyAudioStream(dev->device);
+    dev->device = NULL;
 }
 
 static const MxHWDevice_Vtbl MxHWDevice_SDL3_Vtbl = { .deinit = MxHWDevice_SDL3_deinit, .start = MxHWDevice_SDL3_start, .stop = MxHWDevice_SDL3_stop };

@@ -9,7 +9,9 @@ extern "C" {
 #define MIXR_API
 
 #include "common.h"
+
 #include <stdint.h>
+#include <stddef.h>
 
 typedef uint32_t MxDeviceFlags;
 
@@ -17,6 +19,7 @@ typedef uint32_t MxDeviceFlags;
 #define MX_DEVICE_STOPPED (1 << 0)
 
 typedef struct MxDevice MxDevice;
+typedef size_t MxBuffer;
 
 typedef struct MxDeviceInfo
 {
@@ -24,11 +27,19 @@ typedef struct MxDeviceInfo
     MxDeviceFlags flags; // flags describing the device
 } MxDeviceInfo;
 
+typedef struct MxBufferInfo
+{
+
+} MxBufferInfo;
+
 MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device);
 void mxDestroyDevice(MxDevice *device);
 
 MxResult mxStartDevice(MxDevice *device);
 void mxStopDevice(MxDevice *device);
+
+MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *buffer);
+MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t dataLength);
 
 #ifdef __cplusplus
 }
