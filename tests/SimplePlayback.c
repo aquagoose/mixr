@@ -1,6 +1,7 @@
 #include <mixr/device.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MX_CHECK(result, operation) {\
     printf(operation"\n");\
@@ -13,6 +14,26 @@
 
 int main(int argc, char **argv)
 {
+    if (argc < 2)
+    {
+        printf("Please provide a file path!\n");
+        return 2;
+    }
+
+    const char *path = argv[1];
+    FILE *file = fopen(path, "rb");
+    if (!file)
+    {
+        printf("fopen failed.\n");
+        return 1;
+    }
+    fseek(file, 0, SEEK_END);
+    size_t size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    uint8_t *data = malloc(size);
+    fread(data, 1, size, file);
+    fclose(file);
+
     MxDeviceInfo deviceInfo =
     {
         .sampleRate = 44100
@@ -24,6 +45,9 @@ int main(int argc, char **argv)
     MxBufferInfo bufferInfo = {};
     MxBuffer buffer;
     MX_CHECK(mxCreateBuffer(device, &bufferInfo, &buffer), "Create buffer");
+
+    MX_CHECK(mxUpdateBuffer(device, buffer, data, size), "Update buffer");
+    free(data);
 
     mxDestroyDevice(device);
     return 0;

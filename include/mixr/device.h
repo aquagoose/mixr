@@ -39,7 +39,7 @@ MxResult mxStartDevice(MxDevice *device);
 void mxStopDevice(MxDevice *device);
 
 MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *buffer);
-MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t dataLength);
+MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t dataSize);
 
 #ifdef __cplusplus
 }

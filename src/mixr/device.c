@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 // Initial capacity of buffers and sources.
 #define MX_INITIAL_CAPACITY 16
@@ -14,6 +15,8 @@ typedef struct MxBuffer_Impl
     // reusing the ptr unless the submitted data is larger than the capacity
     size_t dataLength;
     size_t dataCapacity;
+
+    bool valid; // determines if the buffer is valid, and is in-use currently.
 } MxBuffer_Impl;
 
 typedef struct MxDevice_Impl
@@ -100,6 +103,7 @@ MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *bu
     buf.data = NULL;
     buf.dataLength = 0;
     buf.dataCapacity = 0;
+    buf.valid = true;
 
     impl->buffers[id] = buf;
 
@@ -107,8 +111,38 @@ MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *bu
     return MX_RESULT_OK;
 }
 
-MxResult mxUpdateBuffer(MxDevice* device, MxBuffer buffer, void* data, size_t dataLength)
+MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void *data, size_t dataSize)
 {
-    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    // check that user is not attempting to copy over null data
+    if (dataSize > 0 && !data)
+        return MX_RESULT_INVALID_PARAMETER;
 
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    if (buffer >= impl->buffersLength)
+        return MX_RESULT_INVALID_BUFFER;
+
+    MxBuffer_Impl *buf = &impl->buffers[buffer];
+    if (!buf->valid)
+        return MX_RESULT_INVALID_BUFFER;
+
+    if (!data || dataSize == 0)
+        buf->dataLength = 0;
+    else
+    {
+        // resize the buffer's data if required
+        // this will also create the data ptr if the buffer is empty
+        if (dataSize > buf->dataCapacity)
+        {
+            void *bufferData = realloc(buf->data, dataSize);
+            if (!bufferData)
+                return MX_RESULT_OUT_OF_MEMORY;
+            buf->data = bufferData;
+            buf->dataCapacity = dataSize;
+        }
+
+        memcpy(buf->data, data, dataSize);
+        buf->dataLength = dataSize;
+    }
+
+    return MX_RESULT_OK;
 }
