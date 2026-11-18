@@ -2,18 +2,18 @@
 
 #include "sdl/hwdevice_sdl3.h"
 
-MxResult MxHWDevice_init(const MxDeviceInfo *info, MxHWDevice **device)
+MxResult MxHWDevice_init(const MxDeviceInfo *info, MxDevice *device, MxHWDevice **hwDevice)
 {
     MxHWDevice *dev;
 
-    MxResult res = MxHWDevice_SDL3_init(info, &dev);
+    MxResult res = MxHWDevice_SDL3_init(info, device, &dev);
     if (res != MX_RESULT_OK)
         return res;
 
     if ((info->flags & MX_DEVICE_STOPPED) == 0 && ((res = dev->vtbl->start(dev))) != MX_RESULT_OK)
         return res;
 
-    *device = dev;
+    *hwDevice = dev;
     return MX_RESULT_OK;
 }
 

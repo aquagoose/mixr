@@ -41,6 +41,14 @@ void mxStopDevice(MxDevice *device);
 MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *buffer);
 MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t dataSize);
 
+/**
+ * Mix to a stereo, floating-point buffer.
+ * @param device The device to mix with.
+ * @param buffer The float buffer to write to.
+ * @param bufferLength The number of floats in the buffer. This value must be divisible by 2.
+ */
+MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength);
+
 #ifdef __cplusplus
 }
 #endif

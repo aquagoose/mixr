@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define MX_CHECK(result, operation) {\
     printf(operation"\n");\
@@ -36,7 +37,8 @@ int main(int argc, char **argv)
 
     MxDeviceInfo deviceInfo =
     {
-        .sampleRate = 44100
+        .sampleRate = 48000,
+        .flags = MX_DEVICE_STOPPED
     };
 
     MxDevice *device;
@@ -48,6 +50,10 @@ int main(int argc, char **argv)
 
     MX_CHECK(mxUpdateBuffer(device, buffer, data, size), "Update buffer");
     free(data);
+
+    MX_CHECK(mxStartDevice(device), "Start device");
+
+    sleep(30);
 
     mxDestroyDevice(device);
     return 0;

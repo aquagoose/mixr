@@ -8,11 +8,12 @@
 typedef struct MxHWDevice_SDL3
 {
     MxHWDevice base;
+    MxDevice *ctx;
     SDL_AudioSpec spec;
 
     SDL_AudioStream *device;
 } MxHWDevice_SDL3;
 
-MxResult MxHWDevice_SDL3_init(const MxDeviceInfo *info, MxHWDevice **device);
+MxResult MxHWDevice_SDL3_init(const MxDeviceInfo *info, MxDevice *device, MxHWDevice **hwDevice);
 
 #endif //MIXR_HWDEVICE_SDL3_H

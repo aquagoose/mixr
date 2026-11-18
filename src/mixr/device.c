@@ -8,6 +8,11 @@
 // Initial capacity of buffers and sources.
 #define MX_INITIAL_CAPACITY 16
 
+#define MX_GET_SAMPLE(out, buf, idx) {\
+    uint32_t value = ((buf[idx + 0]) | (buf[idx + 1] << 8) | (buf[idx + 2] << 16) | (buf[idx + 3] << 24));\
+    out = *(float *) &value;\
+}
+
 typedef struct MxBuffer_Impl
 {
     void *data;
@@ -27,6 +32,8 @@ typedef struct MxDevice_Impl
     MxBuffer_Impl *buffers;
     size_t buffersLength;
     size_t buffersCapacity;
+
+    size_t tempPos;
 } MxDevice_Impl;
 
 MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device)
@@ -37,7 +44,7 @@ MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device)
 
     impl->info = *info;
 
-    MxResult res = MxHWDevice_init(info, &impl->hwDevice);
+    MxResult res = MxHWDevice_init(info, (MxDevice *) impl, &impl->hwDevice);
     if (res != MX_RESULT_OK)
     {
         free(impl);
@@ -142,6 +149,52 @@ MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void *data, size_t da
 
         memcpy(buf->data, data, dataSize);
         buf->dataLength = dataSize;
+    }
+
+    return MX_RESULT_OK;
+}
+
+MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength)
+{
+    // don't write to a 0-length buffer.
+    if (bufferLength == 0)
+        return MX_RESULT_OK;
+    if (!buffer)
+        return MX_RESULT_INVALID_PARAMETER;
+
+    // check that the buffer is divisible by 2.
+    // todo profile this, maybe make this an assert. maybe
+    if ((bufferLength % 2) != 0)
+        return MX_RESULT_INVALID_PARAMETER;
+
+    if (!device)
+        return MX_RESULT_INVALID_PARAMETER;
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+
+    MxBuffer_Impl *buffers = impl->buffers;
+    size_t buffersLength = impl->buffersLength;
+
+    for (size_t bufidx = 0; bufidx < bufferLength; bufidx += 2)
+    {
+        buffer[bufidx + 0] = 0;
+        buffer[bufidx + 1] = 0;
+
+        for (size_t b = 0; b < buffersLength; b++)
+        {
+            MxBuffer_Impl *buf = &buffers[b];
+            uint8_t *bufData = buf->data;
+
+            size_t idx = impl->tempPos * 8;
+
+            float l, r;
+            MX_GET_SAMPLE(l, bufData, idx);
+            MX_GET_SAMPLE(r, bufData, idx + 4);
+
+            buffer[bufidx + 0] += l;
+            buffer[bufidx + 1] += r;
+
+            impl->tempPos++;
+        }
     }
 
     return MX_RESULT_OK;

@@ -18,7 +18,7 @@ struct MxHWDevice
     MxHWDevice_Vtbl *vtbl;
 };
 
-MxResult MxHWDevice_init(const MxDeviceInfo *info, MxHWDevice **device);
+MxResult MxHWDevice_init(const MxDeviceInfo *info, MxDevice *device, MxHWDevice **hwDevice);
 void MxHWDevice_deinit(MxHWDevice *device);
 
 static MxResult MxHWDevice_start(MxHWDevice *device) { return device->vtbl->start(device); }

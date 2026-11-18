@@ -2,9 +2,21 @@
 
 #include <stdlib.h>
 
+#define MX_BUFFER_SIZE 512
+#define MX_MIN(a, b) (a < b ? a : b)
+
 static void MxHWDevice_SDL3_mix(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount)
 {
+    MxDevice *device = userdata;
 
+    float buffer[MX_BUFFER_SIZE];
+    while (additional_amount > 0)
+    {
+        int total = MX_MIN(additional_amount, MX_BUFFER_SIZE);
+        mxMixStereoF32(device, buffer, total / 4);
+        SDL_PutAudioStreamData(stream, buffer, total);
+        additional_amount -= total;
+    }
 }
 
 static void MxHWDevice_SDL3_deinit(MxHWDevice *self)
@@ -25,7 +37,7 @@ static MxResult MxHWDevice_SDL3_start(MxHWDevice *self)
     if (dev->device)
         return MX_RESULT_OK;
 
-    dev->device = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &dev->spec, MxHWDevice_SDL3_mix, NULL);
+    dev->device = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &dev->spec, MxHWDevice_SDL3_mix, dev->ctx);
     if (!dev->device)
         return MX_RESULT_UNKNOWN_ERROR;
 
@@ -47,7 +59,7 @@ static void MxHWDevice_SDL3_stop(MxHWDevice *self)
 
 static const MxHWDevice_Vtbl MxHWDevice_SDL3_Vtbl = { .deinit = MxHWDevice_SDL3_deinit, .start = MxHWDevice_SDL3_start, .stop = MxHWDevice_SDL3_stop };
 
-MxResult MxHWDevice_SDL3_init(const MxDeviceInfo *info, MxHWDevice **device)
+MxResult MxHWDevice_SDL3_init(const MxDeviceInfo *info, MxDevice *device, MxHWDevice **hwDevice)
 {
     SDL_AudioSpec spec;
     spec.format = SDL_AUDIO_F32;
@@ -59,9 +71,10 @@ MxResult MxHWDevice_SDL3_init(const MxDeviceInfo *info, MxHWDevice **device)
 
     MxHWDevice_SDL3 *dev = malloc(sizeof(MxHWDevice_SDL3));
     dev->base.vtbl = &MxHWDevice_SDL3_Vtbl;
+    dev->ctx = device;
     dev->spec = spec;
     dev->device = NULL;
 
-    *device = (MxHWDevice *) dev;
+    *hwDevice = (MxHWDevice *) dev;
     return MX_RESULT_OK;
 }
