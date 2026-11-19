@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
     MX_CHECK(mxStartDevice(device), "Start device");
 
-    sleep(30);
+    sleep(60);
 
     mxDestroyDevice(device);
     return 0;

@@ -24,6 +24,16 @@ typedef struct MxBuffer_Impl
     bool valid; // determines if the buffer is valid, and is in-use currently.
 } MxBuffer_Impl;
 
+typedef struct MxSource_Impl
+{
+    MxBuffer_Impl *queue;
+    size_t queueCapacity;
+    size_t queueBeg;
+    size_t queueEnd;
+
+    bool valid; // determisn if the source is valid, and is in-use currently
+} MxSource_Impl;
+
 typedef struct MxDevice_Impl
 {
     MxDeviceInfo info;
@@ -33,7 +43,9 @@ typedef struct MxDevice_Impl
     size_t buffersLength;
     size_t buffersCapacity;
 
-    size_t tempPos;
+    MxSource_Impl *sources;
+    size_t sourcesLength;
+    size_t sourcesCapacity;
 } MxDevice_Impl;
 
 MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device)
@@ -47,15 +59,23 @@ MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device)
     MxResult res = MxHWDevice_init(info, (MxDevice *) impl, &impl->hwDevice);
     if (res != MX_RESULT_OK)
     {
-        free(impl);
+        mxDestroyDevice((MxDevice *) impl);
         return res;
     }
 
     impl->buffers = malloc(MX_INITIAL_CAPACITY * sizeof(MxBuffer_Impl));
     if (!impl->buffers)
     {
-        MxHWDevice_deinit(impl->hwDevice);
-        free(impl);
+        mxDestroyDevice((MxDevice *) impl);
+        return MX_RESULT_OUT_OF_MEMORY;
+    }
+    impl->buffersLength = 0;
+    impl->buffersCapacity = MX_INITIAL_CAPACITY;
+
+    impl->sources = malloc(MX_INITIAL_CAPACITY * sizeof(MxSource_Impl));
+    if (!impl->sources)
+    {
+        mxDestroyDevice((MxDevice *) impl);
         return MX_RESULT_OUT_OF_MEMORY;
     }
     impl->buffersLength = 0;
@@ -71,9 +91,23 @@ void mxDestroyDevice(MxDevice *device)
         return;
     MxDevice_Impl *impl = (MxDevice_Impl *) device;
 
+    if (impl->sources)
+    {
+        for (size_t i = 0; i < impl->sourcesLength; i++)
+            free(impl->sources[i].queue);
+    }
+    free(impl->sources);
+
+    if (impl->buffers)
+    {
+        for (size_t i = 0; i < impl->buffersLength; i++)
+            free(impl->buffers[i].data);
+    }
     free(impl->buffers);
 
-    MxHWDevice_deinit(impl->hwDevice);
+    if (impl->hwDevice)
+        MxHWDevice_deinit(impl->hwDevice);
+
     free(impl);
 }
 
@@ -151,6 +185,40 @@ MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void *data, size_t da
         buf->dataLength = dataSize;
     }
 
+    return MX_RESULT_OK;
+}
+
+MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *source)
+{
+    if (!device || !info)
+        return MX_RESULT_INVALID_PARAMETER;
+
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+
+    // resize the sources list if necessary
+    if (impl->sourcesLength + 1 > impl->sourcesCapacity)
+    {
+        size_t newSourcesCapacity = impl->sourcesCapacity << 1;
+        MxSource_Impl *newSources = realloc(impl->sources, newSourcesCapacity);
+        if (!newSources)
+            return MX_RESULT_OUT_OF_MEMORY;
+        impl->sources = newSources;
+        impl->sourcesCapacity = newSourcesCapacity;
+    }
+
+    size_t id = impl->sourcesLength++;
+
+    MxSource_Impl src;
+    src.valid = true;
+
+    src.queue = malloc(MX_INITIAL_CAPACITY * sizeof(MxBuffer_Impl));
+    src.queueCapacity = MX_INITIAL_CAPACITY;
+    src.queueBeg = 0;
+    src.queueEnd = 0;
+
+    impl->sources[id] = src;
+
+    *source = id;
     return MX_RESULT_OK;
 }
 

@@ -20,6 +20,12 @@ typedef uint32_t MxDeviceFlags;
 
 typedef struct MxDevice MxDevice;
 typedef size_t MxBuffer;
+typedef size_t MxSource;
+
+typedef enum MxSourceType
+{
+    MX_SOURCE_TYPE_PCM
+} MxSourceType;
 
 typedef struct MxDeviceInfo
 {
@@ -32,6 +38,12 @@ typedef struct MxBufferInfo
 
 } MxBufferInfo;
 
+typedef struct MxSourceInfo
+{
+    MxSourceType type;
+    MxAudioFormat format;
+} MxSourceInfo;
+
 MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device);
 void mxDestroyDevice(MxDevice *device);
 
@@ -40,6 +52,8 @@ void mxStopDevice(MxDevice *device);
 
 MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *buffer);
 MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t dataSize);
+
+MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *source);
 
 /**
  * Mix to a stereo, floating-point buffer.
