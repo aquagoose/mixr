@@ -78,8 +78,8 @@ MxResult mxCreateDevice(const MxDeviceInfo *info, MxDevice **device)
         mxDestroyDevice((MxDevice *) impl);
         return MX_RESULT_OUT_OF_MEMORY;
     }
-    impl->buffersLength = 0;
-    impl->buffersCapacity = MX_INITIAL_CAPACITY;
+    impl->sourcesLength = 0;
+    impl->sourcesCapacity = MX_INITIAL_CAPACITY;
 
     *device = (MxDevice *) impl;
     return MX_RESULT_OK;
@@ -247,12 +247,10 @@ MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength)
         buffer[bufidx + 0] = 0;
         buffer[bufidx + 1] = 0;
 
-        for (size_t b = 0; b < buffersLength; b++)
+        /*for (size_t b = 0; b < buffersLength; b++)
         {
             MxBuffer_Impl *buf = &buffers[b];
             uint8_t *bufData = buf->data;
-
-            size_t idx = impl->tempPos * 8;
 
             float l, r;
             MX_GET_SAMPLE(l, bufData, idx);
@@ -260,9 +258,7 @@ MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength)
 
             buffer[bufidx + 0] += l;
             buffer[bufidx + 1] += r;
-
-            impl->tempPos++;
-        }
+        }*/
     }
 
     return MX_RESULT_OK;

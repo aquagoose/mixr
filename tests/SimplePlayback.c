@@ -51,6 +51,15 @@ int main(int argc, char **argv)
     MX_CHECK(mxUpdateBuffer(device, buffer, data, size), "Update buffer");
     free(data);
 
+    MxSourceInfo sourceInfo =
+    {
+        .type = MX_SOURCE_TYPE_PCM,
+        .format = { .dataType = MX_DATA_TYPE_F32, .sampleRate = 44100, .channels = 2 }
+    };
+
+    MxSource source;
+    MX_CHECK(mxCreateSource(device, &sourceInfo, &source), "Create source");
+
     MX_CHECK(mxStartDevice(device), "Start device");
 
     sleep(60);
