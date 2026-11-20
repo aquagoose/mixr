@@ -14,6 +14,7 @@ typedef enum MxResult
     MX_RESULT_OUT_OF_MEMORY, // a memory allocation failed
     MX_RESULT_INVALID_PARAMETER, // a function parameter is invalid.
     MX_RESULT_INVALID_BUFFER, // the buffer is not valid
+    MX_RESULT_INVALID_SOURCE, // the source is not valid
 } MxResult;
 
 typedef enum MxDataType

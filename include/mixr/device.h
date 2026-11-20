@@ -54,6 +54,7 @@ MxResult mxCreateBuffer(MxDevice *device, const MxBufferInfo *info, MxBuffer *bu
 MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t dataSize);
 
 MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *source);
+MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer);
 
 /**
  * Mix to a stereo, floating-point buffer.

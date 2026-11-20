@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 // Initial capacity of buffers and sources.
@@ -26,10 +27,18 @@ typedef struct MxBuffer_Impl
 
 typedef struct MxSource_Impl
 {
-    MxBuffer_Impl *queue;
+    MxAudioFormat format;
+
+    // queue containing buffer IDs. it can't contain a reference to the buffers directly, as if the device's buffer
+    // array is resized, the values in here may become invalid references.
+    MxBuffer *queue;
     size_t queueCapacity;
-    size_t queueBeg;
-    size_t queueEnd;
+    size_t queueFront;
+    size_t queueBack;
+
+    // set based on the source's sample rate vs the devices's sample rate.
+    // for example, a 44.1khz source created on a 48khz device will have a base speed of ~0.92
+    float baseSpeed;
 
     bool valid; // determisn if the source is valid, and is in-use currently
 } MxSource_Impl;
@@ -210,15 +219,84 @@ MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *so
 
     MxSource_Impl src;
     src.valid = true;
+    src.format = info->format;
 
-    src.queue = malloc(MX_INITIAL_CAPACITY * sizeof(MxBuffer_Impl));
-    src.queueCapacity = MX_INITIAL_CAPACITY;
-    src.queueBeg = 0;
-    src.queueEnd = 0;
+    src.queue = malloc(4 * sizeof(MxBuffer));
+    src.queueCapacity = 4;
+    src.queueFront = 2;
+    src.queueBack = 2;
+
+    src.baseSpeed = (float) src.format.sampleRate / (float) impl->info.sampleRate;
 
     impl->sources[id] = src;
 
     *source = id;
+    return MX_RESULT_OK;
+}
+
+MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer)
+{
+    if (!device)
+        return MX_RESULT_INVALID_PARAMETER;
+
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    /*if (source > impl->sourcesLength)
+        return MX_RESULT_INVALID_SOURCE;
+    if (buffer > impl->buffersLength)
+        return MX_RESULT_INVALID_BUFFER;*/
+
+    MxSource_Impl *src = &impl->sources[source];
+    //if (!src->valid)
+    //    return MX_RESULT_INVALID_SOURCE;
+    //MxBuffer_Impl *buf = &impl->buffers[buffer];
+    //if (!buf->valid)
+    //    return MX_RESULT_INVALID_BUFFER;
+
+    size_t queueLength;
+    if (src->queueBack < src->queueFront)
+        queueLength = src->queueCapacity - (src->queueFront - src->queueBack);
+    else
+        queueLength = src->queueBack - src->queueFront;
+
+    size_t backIndex = src->queueBack + 1;
+    // wrap index around to the front of the queue
+    if (backIndex > src->queueCapacity)
+        backIndex = 0;
+    // queue is at capacity, needs resizing
+    if (queueLength + 1 > src->queueCapacity)
+    {
+        printf("resize\n");
+
+        size_t newQueueCapacity = src->queueCapacity << 1;
+        MxBuffer *newQueue = malloc(newQueueCapacity * sizeof(MxBuffer));
+        if (!newQueue)
+            return MX_RESULT_OUT_OF_MEMORY;
+
+        // since we're creating a new queue, we want to copy all the data from the old queue to the new one
+        // however we must reset the queue to be "in order", and remove all wrap-around.
+        size_t index = src->queueFront;
+        size_t copyIndex = 0;
+        do
+        {
+            newQueue[copyIndex++] = src->queue[index];
+            if (++index >= src->queueCapacity)
+                index = 0;
+        } while (index != src->queueFront);
+
+        free(src->queue);
+        src->queue = newQueue;
+        src->queueCapacity = newQueueCapacity;
+        src->queueFront = 0;
+        src->queueBack = queueLength;
+        backIndex = queueLength;
+    }
+
+    src->queue[src->queueBack] = buffer;
+    src->queueBack = backIndex;
+
+    for (int i = 0; i < queueLength + 1; i++)
+        printf("%lu\n", src->queue[i]);
+
     return MX_RESULT_OK;
 }
 
