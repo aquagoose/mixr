@@ -42,7 +42,7 @@ namespace mixr::Stream
                 return 0;
 
             if (read < 0)
-                throw std::runtime_error("Failed to read.");
+                throw std::runtime_error("Failed to read. Code " + std::to_string(read));
 
             memcpy(floatBuf + totalRead, buf, read * 2 * 4);
             totalRead += read * 2;
@@ -54,24 +54,32 @@ namespace mixr::Stream
 
     void Opus::Restart()
     {
+        int ret = op_pcm_seek(_file, 0);
+        if (ret < 0)
+            throw std::runtime_error("Failed to seek. Code " + std::to_string(ret));
     }
 
     void Opus::SeekToSample(size_t sample)
     {
+        int ret = op_pcm_seek(_file, static_cast<ogg_int64_t>(sample));
+        if (ret < 0)
+            throw std::runtime_error("Failed to seek. Code " + std::to_string(ret));
     }
 
     size_t Opus::PositionInSamples()
     {
-        return 0;
+        return op_pcm_tell(_file);
     }
 
     size_t Opus::LengthInSamples()
     {
-        return 0;
+        return op_pcm_total(_file, -1);
     }
 
     std::vector<uint8_t> Opus::GetPCM()
     {
-        return {};
+        std::vector<uint8_t> buffer(LengthInSamples());
+        GetBuffer(buffer.data(), buffer.size());
+        return buffer;
     }
 }
