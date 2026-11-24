@@ -5,11 +5,12 @@
 #include <mixr/Stream/Flac.h>
 #include <mixr/Stream/Vorbis.h>
 #include <mixr/Stream/Mp3.h>
+#include <mixr/Stream/Opus.h>
 
 int main(int argc, char **argv)
 {
     MxAudioStream* stream;
-    mxStreamLoadVorbis(argv[1], &stream);
+    mxStreamLoadOpus(argv[1], &stream);
 
     MxAudioFormat format = mxStreamGetFormat(stream);
 
