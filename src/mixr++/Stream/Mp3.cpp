@@ -41,6 +41,7 @@ namespace mixr::Stream {
     }
 
     size_t Mp3::GetBuffer(uint8_t* buffer, size_t bufferLength) {
+        std::cout << "read" << std::endl;
         return mp3dec_ex_read(&_mp3, (mp3d_sample_t*) buffer, bufferLength / sizeof(mp3d_sample_t)) * sizeof(mp3d_sample_t);
     }
 

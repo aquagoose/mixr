@@ -1,11 +1,11 @@
 #include "mixr++/AudioDevice.h"
 #include "Impl.h"
 
-#if defined(_WIN32)
+//#if defined(_WIN32)
 #include "Device/SdlDevice.h"
-#elif defined(__linux__)
-#include "Device/AlsaDevice.h"
-#endif
+//#elif defined(__linux__)
+//#include "Device/AlsaDevice.h"
+//#endif
 
 namespace mixr {
     AudioDevice::AudioDevice(uint32_t sampleRate) {
@@ -22,10 +22,10 @@ namespace mixr {
 
     std::unique_ptr<AudioDevice> AudioDevice::Create(uint32_t sampleRate)
     {
-#if defined(_WIN32)
+//#if defined(_WIN32)
         return std::make_unique<Device::SdlDevice>(sampleRate);
-#elif defined(__linux__)
-        return std::make_unique<Device::AlsaDevice>(sampleRate);
-#endif
+//#elif defined(__linux__)
+//        return std::make_unique<Device::AlsaDevice>(sampleRate);
+//#endif
     }
 }

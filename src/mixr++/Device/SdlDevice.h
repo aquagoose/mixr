@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "../../include/mixr/AudioDevice.h"
+#include "mixr++/AudioDevice.h"
 
 namespace mixr::Device {
 

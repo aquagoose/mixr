@@ -20,20 +20,20 @@ file(GLOB MIXR++_SRC CONFIGURE_DEPENDS
         src/Impl/*.cpp
 )
 
-if (WIN32)
+#if (WIN32)
     list(APPEND MIXR++_SRC src/mixr++/Device/SdlDevice.h src/mixr++/Device/SdlDevice.cpp)
-elseif (LINUX)
-    list(APPEND MIXR++_SRC src/mixr++/Device/AlsaDevice.h src/mixr++/Device/AlsaDevice.cpp)
-endif()
+#elseif (LINUX)
+#    list(APPEND MIXR++_SRC src/mixr++/Device/AlsaDevice.h src/mixr++/Device/AlsaDevice.cpp)
+#endif()
 
 add_library(mixr++ STATIC ${MIXR++_SRC})
 target_include_directories(mixr++ PUBLIC include/)
 target_include_directories(mixr++ PRIVATE src/Impl)
 
-if (WIN32)
+#if (WIN32)
     add_subdirectory(lib/SDL)
     target_link_libraries(mixr++ PUBLIC SDL2::SDL2-static)
-endif ()
+#endif ()
 
 add_subdirectory(lib/stb)
 target_link_libraries(mixr++ PUBLIC stb)
@@ -47,6 +47,11 @@ set(INSTALL_MANPAGES OFF CACHE BOOL "" FORCE)
 set(ENABLE_MULTITHREADING OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/flac)
 target_link_libraries(mixr++ PUBLIC FLAC::FLAC++)
+
+set(OP_DISABLE_DOCS ON)
+set(OP_DISABLE_EXAMPLES ON)
+add_subdirectory(lib/opusfile)
+target_link_libraries(mixr++ PUBLIC OpusFile::opusfile)
 
 target_include_directories(mixr++ PUBLIC lib/minimp3)
 

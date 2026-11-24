@@ -11,3 +11,6 @@
 [submodule "lib/minimp3"]
 	path = lib/minimp3
 	url = https://github.com/lieff/minimp3
+[submodule "lib/opusfile"]
+	path = lib/opusfile
+	url = https://github.com/xiph/opusfile

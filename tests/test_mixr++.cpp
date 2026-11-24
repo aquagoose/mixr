@@ -3,6 +3,7 @@
 #include <mixr++/Stream/Flac.h>
 #include <mixr++/Stream/Vorbis.h>
 #include <mixr++/Stream/Mp3.h>
+#include <mixr++/Stream/Opus.h>
 
 #include <thread>
 #include <iostream>
@@ -24,7 +25,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    auto stream = std::make_unique<Stream::Mp3>(argv[1]);
+    auto stream = std::make_unique<Stream::Opus>(argv[1]);
     auto format = stream->Format();
     //auto data = wav.GetPCM();
 
@@ -113,7 +114,7 @@ int main(int argc, char* argv[])
     int value = 0;
 
     while (source->State() != SourceState::Stopped)
-        {
+    {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << cbData->Stream->PositionInSamples() << std::endl;
     }
