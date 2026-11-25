@@ -14,3 +14,6 @@
 [submodule "lib/opus"]
 	path = lib/opus
 	url = https://github.com/xiph/opus
+[submodule "lib/ogg"]
+	path = lib/ogg
+	url = https://github.com/xiph/ogg

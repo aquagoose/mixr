@@ -50,6 +50,8 @@ target_link_libraries(mixr++ PUBLIC FLAC::FLAC++)
 
 set(OP_DISABLE_DOCS ON)
 set(OP_DISABLE_EXAMPLES ON)
+set(OP_DISABLE_HTTP ON)
+add_subdirectory(lib/ogg)
 add_subdirectory(lib/opus)
 add_subdirectory(lib/opusfile)
 target_link_libraries(mixr++ PUBLIC OpusFile::opusfile)
