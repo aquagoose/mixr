@@ -221,10 +221,10 @@ MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *so
     src.valid = true;
     src.format = info->format;
 
-    src.queue = malloc(4 * sizeof(MxBuffer));
-    src.queueCapacity = 4;
-    src.queueFront = 2;
-    src.queueBack = 2;
+    src.queue = malloc(MX_INITIAL_CAPACITY * sizeof(MxBuffer));
+    src.queueCapacity = MX_INITIAL_CAPACITY;
+    src.queueFront = 0;
+    src.queueBack = (size_t) -1;
 
     src.baseSpeed = (float) src.format.sampleRate / (float) impl->info.sampleRate;
 
@@ -246,22 +246,18 @@ MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer)
         return MX_RESULT_INVALID_BUFFER;*/
 
     MxSource_Impl *src = &impl->sources[source];
-    //if (!src->valid)
-    //    return MX_RESULT_INVALID_SOURCE;
+    if (!src->valid)
+        return MX_RESULT_INVALID_SOURCE;
     //MxBuffer_Impl *buf = &impl->buffers[buffer];
     //if (!buf->valid)
     //    return MX_RESULT_INVALID_BUFFER;
 
     size_t queueLength;
     if (src->queueBack < src->queueFront)
-        queueLength = src->queueCapacity - (src->queueFront - src->queueBack);
+        queueLength = (src->queueCapacity - (src->queueFront - src->queueBack)) + 1;
     else
-        queueLength = src->queueBack - src->queueFront;
+        queueLength = (src->queueBack - src->queueFront) + 1;
 
-    size_t backIndex = src->queueBack + 1;
-    // wrap index around to the front of the queue
-    if (backIndex > src->queueCapacity)
-        backIndex = 0;
     // queue is at capacity, needs resizing
     if (queueLength + 1 > src->queueCapacity)
     {
@@ -279,7 +275,7 @@ MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer)
         do
         {
             newQueue[copyIndex++] = src->queue[index];
-            if (++index >= src->queueCapacity)
+            if (++index > queueLength)
                 index = 0;
         } while (index != src->queueFront);
 
@@ -287,14 +283,15 @@ MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer)
         src->queue = newQueue;
         src->queueCapacity = newQueueCapacity;
         src->queueFront = 0;
-        src->queueBack = queueLength;
-        backIndex = queueLength;
     }
 
-    src->queue[src->queueBack] = buffer;
-    src->queueBack = backIndex;
+    src->queueBack++;
+    if (src->queueBack > src->queueCapacity)
+        src->queueBack = 0;
 
-    for (int i = 0; i < queueLength + 1; i++)
+    src->queue[src->queueBack] = buffer;
+
+    for (int i = 0; i < queueLength; i++)
         printf("%lu\n", src->queue[i]);
 
     return MX_RESULT_OK;

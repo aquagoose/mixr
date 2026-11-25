@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     MxSource source;
     MX_CHECK(mxCreateSource(device, &sourceInfo, &source), "Create source");
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 20; i++)
         MX_CHECK(mxSourceQueueBuffer(device, source, i), "Queue buffer");
 
     MX_CHECK(mxStartDevice(device), "Start device");
