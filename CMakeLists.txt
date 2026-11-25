@@ -35,7 +35,7 @@ if (WIN32)
     target_link_libraries(mixr++ PUBLIC SDL2::SDL2-static)
 endif ()
 
-add_subdirectory(lib/stb)
+add_subdirectory(lib/stbv)
 target_link_libraries(mixr++ PUBLIC stb)
 
 if (LINUX)
@@ -50,6 +50,7 @@ target_link_libraries(mixr++ PUBLIC FLAC::FLAC++)
 
 set(OP_DISABLE_DOCS ON)
 set(OP_DISABLE_EXAMPLES ON)
+add_subdirectory(lib/opus)
 add_subdirectory(lib/opusfile)
 target_link_libraries(mixr++ PUBLIC OpusFile::opusfile)
 
