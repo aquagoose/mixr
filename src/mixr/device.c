@@ -324,6 +324,29 @@ MxResult mxSourcePlay(MxDevice *device, MxSource source)
     return MX_RESULT_OK;
 }
 
+MxResult mxSourceGetState(MxDevice *device, MxSource source, MxSourceState* state)
+{
+    if (!device)
+        return MX_RESULT_INVALID_PARAMETER;
+
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    if (source > impl->sourcesLength)
+        return MX_RESULT_INVALID_SOURCE;
+
+    MxSource_Impl *src = &impl->sources[source];
+    if (!src->valid)
+        return MX_RESULT_INVALID_SOURCE;
+
+    if (src->playing)
+        *state = MX_SOURCE_STATE_PLAYING;
+    else if (src->queueFront != -1)
+        *state = MX_SOURCE_STATE_PAUSED;
+    else
+        *state = MX_SOURCE_STATE_STOPPED;
+
+    return MX_RESULT_OK;
+}
+
 MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength)
 {
     // don't write to a 0-length buffer.
