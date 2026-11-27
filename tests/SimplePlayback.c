@@ -54,14 +54,14 @@ int main(int argc, char **argv)
     MxSourceInfo sourceInfo =
     {
         .type = MX_SOURCE_TYPE_PCM,
-        .format = { .dataType = MX_DATA_TYPE_F32, .sampleRate = 44100, .channels = 2 }
+        .format = { .dataType = MX_DATA_TYPE_F32, .sampleRate = 48000, .channels = 2 }
     };
 
     MxSource source;
     MX_CHECK(mxCreateSource(device, &sourceInfo, &source), "Create source");
+    MX_CHECK(mxSourceQueueBuffer(device, source, buffer), "Queue buffer");
 
-    for (int i = 0; i < 20; i++)
-        MX_CHECK(mxSourceQueueBuffer(device, source, i), "Queue buffer");
+    MX_CHECK(mxSourcePlay(device, source), "Play source");
 
     MX_CHECK(mxStartDevice(device), "Start device");
 

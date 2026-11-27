@@ -1,4 +1,7 @@
 #include "mixr/device.h"
+
+#include <assert.h>
+
 #include "hw/hwdevice.h"
 
 #include <stdlib.h>
@@ -9,7 +12,7 @@
 // Initial capacity of buffers and sources.
 #define MX_INITIAL_CAPACITY 16
 
-#define MX_GET_SAMPLE(out, buf, idx) {\
+#define MX_GET_SAMPLE(out, type, buf, idx) {\
     uint32_t value = ((buf[idx + 0]) | (buf[idx + 1] << 8) | (buf[idx + 2] << 16) | (buf[idx + 3] << 24));\
     out = *(float *) &value;\
 }
@@ -39,6 +42,10 @@ typedef struct MxSource_Impl
     // set based on the source's sample rate vs the devices's sample rate.
     // for example, a 44.1khz source created on a 48khz device will have a base speed of ~0.92
     float baseSpeed;
+
+    bool playing; // if the source shoudl be playing
+    size_t pos; // the position, in samples
+    float finePos; // the fine position in samples
 
     bool valid; // determisn if the source is valid, and is in-use currently
 } MxSource_Impl;
@@ -228,6 +235,9 @@ MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *so
 
     src.baseSpeed = (float) src.format.sampleRate / (float) impl->info.sampleRate;
 
+    src.pos = 0;
+    src.finePos = 0.0f;
+
     impl->sources[id] = src;
 
     *source = id;
@@ -240,17 +250,17 @@ MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer)
         return MX_RESULT_INVALID_PARAMETER;
 
     MxDevice_Impl *impl = (MxDevice_Impl *) device;
-    /*if (source > impl->sourcesLength)
+    if (source > impl->sourcesLength)
         return MX_RESULT_INVALID_SOURCE;
     if (buffer > impl->buffersLength)
-        return MX_RESULT_INVALID_BUFFER;*/
+        return MX_RESULT_INVALID_BUFFER;
 
     MxSource_Impl *src = &impl->sources[source];
     if (!src->valid)
         return MX_RESULT_INVALID_SOURCE;
-    //MxBuffer_Impl *buf = &impl->buffers[buffer];
-    //if (!buf->valid)
-    //    return MX_RESULT_INVALID_BUFFER;
+    MxBuffer_Impl *buf = &impl->buffers[buffer];
+    if (!buf->valid)
+        return MX_RESULT_INVALID_BUFFER;
 
     size_t queueLength;
     if (src->queueBack < src->queueFront)
@@ -297,6 +307,23 @@ MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer)
     return MX_RESULT_OK;
 }
 
+MxResult mxSourcePlay(MxDevice *device, MxSource source)
+{
+    if (!device)
+        return MX_RESULT_INVALID_PARAMETER;
+
+    MxDevice_Impl *impl = (MxDevice_Impl *) device;
+    if (source > impl->sourcesLength)
+        return MX_RESULT_INVALID_SOURCE;
+
+    MxSource_Impl *src = &impl->sources[source];
+    if (!src->valid)
+        return MX_RESULT_INVALID_SOURCE;
+
+    src->playing = true;
+    return MX_RESULT_OK;
+}
+
 MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength)
 {
     // don't write to a 0-length buffer.
@@ -316,24 +343,44 @@ MxResult mxMixStereoF32(MxDevice *device, float *buffer, size_t bufferLength)
 
     MxBuffer_Impl *buffers = impl->buffers;
     size_t buffersLength = impl->buffersLength;
+    MxSource_Impl *sources = impl->sources;
+    size_t sourcesLength = impl->sourcesLength;
 
     for (size_t bufidx = 0; bufidx < bufferLength; bufidx += 2)
     {
         buffer[bufidx + 0] = 0;
         buffer[bufidx + 1] = 0;
 
-        /*for (size_t b = 0; b < buffersLength; b++)
+        for (size_t s = 0; s < sourcesLength; s++)
         {
+            MxSource_Impl *src = &sources[s];
+            // todo source playing list
+            if (!src->playing)
+                continue;
+
+            MxAudioFormat *format = &src->format;
+
+            MxBuffer b = src->queue[src->queueFront];
+            assert(b < buffersLength);
             MxBuffer_Impl *buf = &buffers[b];
+            assert(buf->valid);
+
             uint8_t *bufData = buf->data;
 
+            size_t bytePos = src->pos * 8;
+
             float l, r;
-            MX_GET_SAMPLE(l, bufData, idx);
-            MX_GET_SAMPLE(r, bufData, idx + 4);
+            MX_GET_SAMPLE(l, format.dataType, bufData, bytePos);
+            MX_GET_SAMPLE(r, format.dataType, bufData, bytePos + 4);
+
+            src->finePos += src->baseSpeed;
+            size_t intPos = (size_t) src->finePos;
+            src->pos += intPos;
+            src->finePos -= intPos;
 
             buffer[bufidx + 0] += l;
             buffer[bufidx + 1] += r;
-        }*/
+        }
     }
 
     return MX_RESULT_OK;

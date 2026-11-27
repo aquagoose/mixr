@@ -27,6 +27,13 @@ typedef enum MxSourceType
     MX_SOURCE_TYPE_PCM
 } MxSourceType;
 
+typedef enum MxSourceState
+{
+    MX_SOURCE_STATE_STOPPED,
+    MX_SOURCE_STATE_PAUSED,
+    MX_SOURCE_STATE_PLAYING
+} MxSourceState;
+
 typedef struct MxDeviceInfo
 {
     uint32_t sampleRate; // the sampling rate in hz
@@ -55,6 +62,7 @@ MxResult mxUpdateBuffer(MxDevice *device, MxBuffer buffer, void* data, size_t da
 
 MxResult mxCreateSource(MxDevice *device, const MxSourceInfo *info, MxSource *source);
 MxResult mxSourceQueueBuffer(MxDevice *device, MxSource source, MxBuffer buffer);
+MxResult mxSourcePlay(MxDevice *device, MxSource source);
 
 /**
  * Mix to a stereo, floating-point buffer.
